@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  This CloudFormation template creates billing alerts to trigger for any costs incurred.
+
+Resources:
+  BillingAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: 'BillingAlarm'
+      AlarmDescription: 'Alarm when AWS charges exceed $0.00'
+      MetricName: 'EstimatedCharges'
+      Namespace: 'AWS/Billing'
+      Statistic: 'Maximum'
+      Period: '21600' # 6 hours
+      EvaluationPeriods: '1'
+      Threshold: '0.0'
+      ComparisonOperator: 'GreaterThanThreshold'
+      Dimensions:
+        - Name: 'Currency'
+          Value: 'USD'
+      AlarmActions:
+        - Ref: 'BillingTopic'
+
+  BillingTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      TopicName: 'BillingAlerts'
+      Subscription:
+        - Protocol: 'email'
+          Endpoint: 'your-email@example.com' # Replace with your email address
+
+Outputs:
+  BillingAlarmName:
+    Description: 'The name of the billing alarm'
+    Value: !Ref BillingAlarm
+  BillingTopicArn:
+    Description: 'The ARN of the billing SNS topic'
+    Value: !Ref BillingTopic
